@@ -1,5 +1,5 @@
 {
-  "name": "@pushnow/sdk",
+  "name": "pushnow-sdk",
   "version": "0.1.0",
   "description": "Browser-compatible end-to-end encrypted PushNow v2 notification SDK",
   "keywords": ["pushnow", "notifications", "e2ee", "hpke", "sdk", "automation", "ai-agents"],

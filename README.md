@@ -18,16 +18,16 @@ npm pack
 Install from npm after publication:
 
 ```sh
-npm install @pushnow/sdk
+npm install pushnow-sdk
 ```
 
 For local development, install the resulting `pushnow-sdk-0.1.0.tgz` into a
-consuming project, or use a local `file:` dependency. Package name: `@pushnow/sdk`.
+consuming project, or use a local `file:` dependency. Package name: `pushnow-sdk`.
 
 The ESM entry `dist/index.js` includes TypeScript declarations. For an unbundled
 browser, serve `dist/browser.js` and import it as an ES module. It includes the
-HPKE dependency and needs no import map. A bundler can use `@pushnow/sdk` directly;
-`@pushnow/sdk/browser` selects the standalone bundle. There is no CommonJS entry.
+HPKE dependency and needs no import map. A bundler can use `pushnow-sdk` directly;
+`pushnow-sdk/browser` selects the standalone bundle. There is no CommonJS entry.
 Use HTTPS, or loopback HTTP for development, in a runtime with `crypto.subtle`,
 `fetch`, `AbortController`, and `structuredClone` (modern browsers or Node 22+).
 
@@ -38,7 +38,7 @@ archive and approving device must already be initialized. SDK sender approval
 is separate from email/password login; the SDK does not implement account login.
 
 ```ts
-import {beginLogin, finishLogin} from '@pushnow/sdk';
+import {beginLogin, finishLogin} from 'pushnow-sdk';
 
 const controller = new AbortController();
 const pending = await beginLogin('https://api.pushnow.dev', 'My automation', {
@@ -102,7 +102,7 @@ strings or protect secrets from scripts running in the same page.
 ## Send
 
 ```ts
-import {sendNotification} from '@pushnow/sdk';
+import {sendNotification} from 'pushnow-sdk';
 
 const result = await sendNotification(config, {
   title: 'Build completed',
@@ -156,7 +156,7 @@ Successful API acceptance is not proof of device-visible delivery or audible sou
 ## Low-Level Flow and Retries
 
 ```ts
-import {recipientsV2, uploadAttachment, prepareMessageV2, submitMessageV2} from '@pushnow/sdk';
+import {recipientsV2, uploadAttachment, prepareMessageV2, submitMessageV2} from 'pushnow-sdk';
 
 const directory = await recipientsV2(config);
 const attachment = await uploadAttachment(config, file, {name: file.name});

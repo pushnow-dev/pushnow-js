@@ -9,7 +9,7 @@
 发布到 npm 后：
 
 ```sh
-npm install @pushnow/sdk
+npm install pushnow-sdk
 ```
 
 本地开发：
@@ -26,7 +26,7 @@ npm pack
 SDK sender 需要先在已登录的 PushNow App 中审批。`pending.fingerprint` 是新 sender 的指纹，不是账号根指纹。`expectedIdentityFingerprint` 必须来自可信设备，不能从同一个未验证 grant 自动计算并接受。
 
 ```ts
-import {beginLogin, finishLogin} from '@pushnow/sdk';
+import {beginLogin, finishLogin} from 'pushnow-sdk';
 
 const pending = await beginLogin('https://api.pushnow.dev', 'My automation');
 const config = await finishLogin(pending, {
@@ -37,7 +37,7 @@ const config = await finishLogin(pending, {
 ## 发送通知
 
 ```ts
-import {sendNotification} from '@pushnow/sdk';
+import {sendNotification} from 'pushnow-sdk';
 
 await sendNotification(config, {
   title: 'Build completed',
