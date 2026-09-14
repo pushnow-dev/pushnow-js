@@ -1,13 +1,13 @@
 import {Aes256Gcm, CipherSuite, DhkemP256HkdfSha256, HkdfSha256} from '@hpke/core';
 import {base64, bytes, cryptoAPI, decode} from './encoding.js';
 import {validateArchive} from './config.js';
-import type {Archive, AuthorizedConfig, Envelope, PendingLogin} from './types.js';
+import type {Archive, AuthorizedConfig, Envelope, PendingAccountLogin} from './types.js';
 
 export const suite = new CipherSuite({kem: new DhkemP256HkdfSha256(), kdf: new HkdfSha256(), aead: new Aes256Gcm()});
 export const v2AAD = (purpose: string, config: AuthorizedConfig, messageID: string, archiveID: string) =>
   bytes(JSON.stringify([2, purpose, config.user_id, config.source_id, messageID, archiveID]));
 
-export async function generateAgreementKey(): Promise<PendingLogin['key']> {
+export async function generateAgreementKey(): Promise<PendingAccountLogin['key']> {
   cryptoAPI();
   const pair = await suite.kem.generateKeyPair();
   return {privateKey: base64(await suite.kem.serializePrivateKey(pair.privateKey)), publicKey: base64(await suite.kem.serializePublicKey(pair.publicKey))};
@@ -45,7 +45,7 @@ export async function sealV2(config: AuthorizedConfig, archive: Archive, purpose
   return {enc: base64(sender.enc), ciphertext: base64(await sender.seal(bytes(JSON.stringify(plaintext)), v2AAD(purpose, config, messageID, archive.id)))};
 }
 
-export async function openSenderGrant(pending: PendingLogin, grant: Envelope): Promise<unknown> {
+export async function openSenderGrant(pending: PendingAccountLogin, grant: Envelope): Promise<unknown> {
   const ciphertext = decode(grant.ciphertext);
   if (ciphertext.length > 8192 || ciphertext.length < 16) throw new Error('Invalid authorization grant size');
   const recipient = await suite.createRecipientContext({recipientKey: await suite.kem.deserializePrivateKey(decode(pending.key.privateKey, 32)),

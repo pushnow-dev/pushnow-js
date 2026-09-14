@@ -35,21 +35,6 @@ const config = await finishAccountLogin(pending);
 
 `finishAccountLogin` 会校验 grant、API origin、账号绑定、archive 证书、source 证书、sender 私钥/公钥匹配和设备目录。只有 bearer token 不能加密消息，也不能替代返回的 sender config。
 
-## 手动 Fingerprint 授权
-
-不能使用账号 token 的 CLI 或离线环境，可以继续使用手动账号根指纹流程：
-
-```ts
-import {beginLogin, finishLogin} from 'pushnow-sdk';
-
-const pending = await beginLogin('https://api.pushnow.dev', 'My automation');
-const config = await finishLogin(pending, {
-  expectedIdentityFingerprint: trustedAccountFingerprint,
-});
-```
-
-`pending.fingerprint` 是新 sender 的指纹，不是账号根指纹。`expectedIdentityFingerprint` 必须来自可信设备，不能从同一个未验证 grant 自动计算并接受。
-
 ## 发送通知
 
 ```ts

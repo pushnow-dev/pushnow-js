@@ -58,34 +58,12 @@ certificate, source certificate, sender private/public key match and recipient
 directory before returning the config. A bearer token alone cannot encrypt
 messages and is never a replacement for the returned sender config.
 
-## Manual Fingerprint Authorization
-
-For CLI/offline environments that cannot use an account access token, keep the
-manual root-fingerprint flow:
-
-```ts
-import {beginLogin, finishLogin} from 'pushnow-sdk';
-
-const pending = await beginLogin('https://api.pushnow.dev', 'My automation');
-const config = await finishLogin(pending, {
-  expectedIdentityFingerprint: trustedAccountFingerprint,
-});
-```
-
-`pending.fingerprint` identifies the new sender. It is not the account identity
-fingerprint. `expectedIdentityFingerprint` must be the independently verified
-64-character SHA-256 hex fingerprint of the account identity public key. Never
-compute the expected value from the same untrusted grant and auto-accept it.
-Alternatively, supply `confirmIdentity: async ({fingerprint, userID}) => boolean`
-and require explicit user comparison with their trusted device. These options
-are mutually exclusive. Missing verification or a mismatch fails closed.
-
 Polling respects the server interval and handles HTTP 429; aborting cancels
 both polling requests and waiting. Authorization grants are single-use. If a
 grant is consumed but validation or a subsequent directory request fails, start
-a fresh authorization. `finishLogin` checks origin, archive certificate,
-account fingerprint, source certificate, sender private/public key match and
-device certificates before returning the config.
+a fresh authorization. `finishAccountLogin` checks origin, archive certificate,
+account identity, source certificate, sender private/public key match and device
+certificates before returning the config.
 
 ## Config and Account Binding
 
@@ -104,7 +82,7 @@ type AuthorizedConfig = {
 ```
 
 A bearer token alone cannot encrypt messages. It authorizes HTTP requests but
-does not contain the authenticated sender private key, pinned account identity
+does not contain the authenticated sender private key, verified account identity
 or certified archive public key. Only the receiving account devices have the
 archive private key used to decrypt messages.
 
@@ -163,7 +141,7 @@ Schedules must be future ISO timestamps within 30 days. An expiry must follow
 the delivery time and be within 30 days. Offset timestamps are normalized to UTC.
 `MessageOptions.sound` accepts `'default'`, `'silent'`, or `'chime'`. It is public
 routing metadata on the prepared request, like `scheduled_at`, and is not part
-of the encrypted content. Omit it to preserve the legacy wire and default sound
+of the encrypted content. Omit it to use the default sound
 behavior. Invalid values are rejected before any HTTP request or file upload.
 `'silent'` omits APNs `aps.sound`; it does not suppress the visible notification
 (use `inboxOnly` for that). `'chime'` selects `pushnow-chime.wav`, bundled in the

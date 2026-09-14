@@ -1,11 +1,24 @@
 {
   "name": "pushnow-sdk",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Browser-compatible end-to-end encrypted PushNow v2 notification SDK",
-  "keywords": ["pushnow", "notifications", "e2ee", "hpke", "sdk", "automation", "ai-agents"],
+  "keywords": [
+    "pushnow",
+    "notifications",
+    "e2ee",
+    "hpke",
+    "sdk",
+    "automation",
+    "ai-agents"
+  ],
   "homepage": "https://github.com/pushnow-dev/pushnow-js#readme",
-  "bugs": { "url": "https://github.com/pushnow-dev/pushnow-js/issues" },
-  "repository": { "type": "git", "url": "git+https://github.com/pushnow-dev/pushnow-js.git" },
+  "bugs": {
+    "url": "https://github.com/pushnow-dev/pushnow-js/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pushnow-dev/pushnow-js.git"
+  },
   "license": "UNLICENSED",
   "type": "module",
   "sideEffects": false,
@@ -13,11 +26,22 @@
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
-    ".": { "types": "./dist/index.d.ts", "import": "./dist/index.js", "default": "./dist/index.js" },
-    "./browser": { "types": "./dist/index.d.ts", "default": "./dist/browser.js" },
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./browser": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/browser.js"
+    },
     "./package.json": "./package.json"
   },
-  "files": ["dist", "README.md", "README.zh-CN.md"],
+  "files": [
+    "dist",
+    "README.md",
+    "README.zh-CN.md"
+  ],
   "scripts": {
     "check": "tsc --noEmit",
     "build": "tsc && node scripts/build.mjs",
@@ -25,7 +49,15 @@
     "test:browser": "npm run build && node --test test/browser.test.mjs",
     "prepack": "npm run build"
   },
-  "dependencies": { "@hpke/core": "1.9.0" },
-  "devDependencies": { "typescript": "~5.9.2", "esbuild": "^0.28.2", "playwright": "^1.58.0" },
-  "engines": { "node": ">=22" }
+  "dependencies": {
+    "@hpke/core": "1.9.0"
+  },
+  "devDependencies": {
+    "typescript": "~5.9.2",
+    "esbuild": "^0.28.2",
+    "playwright": "^1.58.0"
+  },
+  "engines": {
+    "node": ">=22"
+  }
 }

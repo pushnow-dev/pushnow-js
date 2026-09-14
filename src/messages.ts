@@ -69,7 +69,7 @@ export async function prepareMessageV2(input: AuthorizedConfig, inputDirectory: 
   const previewData: {title: string; body: string; image?: AttachmentDescriptor} = {title: truncateUTF8(full.title, 400), body: truncateUTF8(full.body, 700)};
   const image = full.attachments.find(a => a.id === full.image_id);
   if (image && bytes(JSON.stringify(image)).length <= 600) previewData.image = image;
-  // Budget for the longest supported APNs filename, including legacy/default requests.
+  // Budget for the longest supported APNs filename, including default requests.
   const previewSize = (envelope: Envelope) => bytes(JSON.stringify({aps: {alert: {title: 'PushNow', body: 'You have a new encrypted reminder.'}, 'mutable-content': 1, sound: 'pushnow-chime.wav'},
     secure_v2: {message_id: messageID, user_id: config.user_id, source_id: config.source_id, archive_id: directory.archive.id,
       device_id: '00000000-0000-0000-0000-000000000000', ...envelope, source_public_key: directory.source_public_key,

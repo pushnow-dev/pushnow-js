@@ -15,12 +15,14 @@ export interface AuthorizedConfig {
   archive: Archive;
 }
 
-export interface PendingLogin {
+export interface PendingAccountLogin {
   api_url: string;
   key: {privateKey: string; publicKey: string};
   authorization: {id: string; device_code: string; user_code: string; expires_at: string; interval: number};
   /** Sender fingerprint for comparison on the approving device, not the account fingerprint. */
   fingerprint: string;
+  accountUserID: string;
+  expectedIdentityFingerprint: string;
 }
 
 export interface RequestEvent {
@@ -37,11 +39,6 @@ export interface RequestOptions {
   fetcher?: typeof fetch;
   onRequest?: (event: Readonly<RequestEvent>) => void | Promise<void>;
 }
-
-export type IdentityVerification =
-  | {expectedIdentityFingerprint: string; confirmIdentity?: never}
-  | {expectedIdentityFingerprint?: never; confirmIdentity: (identity: {fingerprint: string; userID: string}) => boolean | Promise<boolean>};
-export type FinishLoginOptions = RequestOptions & IdentityVerification;
 
 export interface RecipientDevice {
   id: string;
@@ -92,7 +89,7 @@ export interface MessageContent {
 
 export type NotificationSound = 'default' | 'silent' | 'chime';
 export interface MessageOptions {
-  /** Public routing metadata; omitted keeps legacy default behavior. */
+  /** Public routing metadata; omitted keeps default behavior. */
   sound?: NotificationSound;
   deviceIds?: string[];
   inboxOnly?: boolean;
@@ -117,8 +114,3 @@ export interface PreparedMessage extends Envelope {
   expires_at?: string;
 }
 export interface SubmitResult {message_id: string; deduplicated: boolean}
-
-export interface PendingAccountLogin extends PendingLogin {
-  accountUserID: string;
-  expectedIdentityFingerprint: string;
-}

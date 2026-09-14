@@ -66,11 +66,14 @@ test('attachment AES-GCM wire is CLI-compatible, filename and keys stay off HTTP
   assert.deepEqual(clear,new TextEncoder().encode('private attachment'));
 });
 
-test('authorization interoperates with CLI grants and requires explicit identity and source binding', async () => {
+test('account token authorization interoperates with CLI grants and verifies identity and source binding', async () => {
   const f=await fixtureV2();
-  const pending=await sdk.beginLogin(f.config.api_url,'Browser',{fetcher:async(_url,init)=>{
+  const accessToken='test-access-token';
+  const pending=await sdk.beginAccountLogin(f.config.api_url,accessToken,'Browser',{fetcher:async(_url,init)=>{
+    assert.equal(init.headers.authorization,`Bearer ${accessToken}`);
     assert.deepEqual(Object.keys(JSON.parse(init.body)).sort(),['name','public_key']);
-    return json({id:crypto.randomUUID(),device_code:base64(crypto.getRandomValues(new Uint8Array(32))),user_code:'ABCD2345',expires_at:new Date(Date.now()+60000).toISOString(),interval:3});
+    return json({id:crypto.randomUUID(),device_code:base64(crypto.getRandomValues(new Uint8Array(32))),user_code:'ABCD2345',
+      expires_at:new Date(Date.now()+60000).toISOString(),interval:3,user_id:f.config.user_id,identity_public_key:f.config.identity_public_key});
   }});
   const config={...f.config,sender_private_key:pending.key.privateKey},directory={...f.directory,source_public_key:pending.key.publicKey,
     source_certificate:await sign(f,'source',f.config.source_id,pending.key.publicKey)};
@@ -78,13 +81,11 @@ test('authorization interoperates with CLI grants and requires explicit identity
   const sender=await suite.createSenderContext({recipientPublicKey:await suite.kem.deserializePublicKey(decode(pending.key.publicKey)),info:bytes('pushnow-sender-grant-v2')});
   const grant={enc:base64(sender.enc),ciphertext:base64(await sender.seal(bytes(JSON.stringify(grantConfig)),bytes(JSON.stringify([2,'sender-grant',pending.authorization.id,pending.key.publicKey]))))};
   const fetcher=async url=>json(url.pathname==='/v2/recipients'?directory:{status:'approved',grant});
-  const expectedIdentityFingerprint=await sdk.fingerprint(f.config.identity_public_key);
-  assert.equal((await sdk.finishLogin(pending,{fetcher,expectedIdentityFingerprint})).sender_private_key,pending.key.privateKey);
-  await assert.rejects(sdk.finishLogin(pending,{fetcher}),/Explicit/);
-  await assert.rejects(sdk.finishLogin(pending,{fetcher,expectedIdentityFingerprint:'0'.repeat(64)}),/not confirmed/);
-  await assert.rejects(sdk.finishLogin(pending,{expectedIdentityFingerprint,fetcher:async url=>json(url.pathname==='/v2/recipients'?f.directory:{status:'approved',grant})}),/does not match/);
+  assert.equal((await sdk.finishAccountLogin(pending,{fetcher})).sender_private_key,pending.key.privateKey);
+  await assert.rejects(sdk.finishAccountLogin({...pending,expectedIdentityFingerprint:'0'.repeat(64)},{fetcher}),/not confirmed/);
+  await assert.rejects(sdk.finishAccountLogin(pending,{fetcher:async url=>json(url.pathname==='/v2/recipients'?f.directory:{status:'approved',grant})}),/does not match/);
   const controller=new AbortController();setTimeout(()=>controller.abort(),25);
-  await assert.rejects(sdk.finishLogin(pending,{expectedIdentityFingerprint,signal:controller.signal,fetcher:async()=>new Response(null,{status:429})}),{name:'AbortError'});
+  await assert.rejects(sdk.finishAccountLogin(pending,{signal:controller.signal,fetcher:async()=>new Response(null,{status:429})}),{name:'AbortError'});
 });
 
 test('safe logging and errors omit credentials and arbitrary server/network text',async()=>{

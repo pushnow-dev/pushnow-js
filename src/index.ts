@@ -1,4 +1,4 @@
-export {beginLogin, finishLogin, beginAccountLogin, finishAccountLogin} from './auth.js';
+export {beginAccountLogin, finishAccountLogin} from './auth.js';
 export {validateConfig} from './config.js';
 export {recipientsV2} from './recipients.js';
 export {prepareMessageV2, submitMessageV2} from './messages.js';

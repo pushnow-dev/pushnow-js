@@ -3,20 +3,7 @@ import {generateAgreementKey, openSenderGrant, senderPublicKey, verifyArchive} f
 import {fingerprint, object, uuid} from './encoding.js';
 import {APIError, request} from './http.js';
 import {recipientsV2} from './recipients.js';
-import type {AuthorizedConfig, Envelope, FinishLoginOptions, PendingLogin, PendingAccountLogin, RequestOptions} from './types.js';
-
-export async function beginLogin(apiURL: string, name: string, options: RequestOptions = {}): Promise<PendingLogin> {
-  if (typeof name !== 'string' || !name.trim() || name.trim().length > 80) throw new Error('Sender name must have 1 to 80 characters');
-  options.signal?.throwIfAborted();
-  const api_url = validateAPIURL(apiURL), key = await generateAgreementKey();
-  const value = object(await request(api_url, '/v2/authorizations', {...options, method: 'POST', body: {name: name.trim(), public_key: key.publicKey}}));
-  uuid(value.id);
-  if (typeof value.device_code !== 'string' || typeof value.user_code !== 'string' || typeof value.expires_at !== 'string' ||
-    !Number.isFinite(Date.parse(value.expires_at)) || Date.parse(value.expires_at) <= Date.now()) throw new Error('Invalid authorization response');
-  return {api_url, key, authorization: {id: value.id, device_code: value.device_code, user_code: value.user_code,
-    expires_at: value.expires_at, interval: typeof value.interval === 'number' && Number.isFinite(value.interval) ? Math.max(3, value.interval) : 3},
-    fingerprint: await fingerprint(key.publicKey)};
-}
+import type {AuthorizedConfig, Envelope, PendingAccountLogin, RequestOptions} from './types.js';
 
 async function wait(ms: number, signal?: AbortSignal): Promise<void> {
   signal?.throwIfAborted();
@@ -28,10 +15,9 @@ async function wait(ms: number, signal?: AbortSignal): Promise<void> {
   });
 }
 
-export async function finishLogin(input: PendingLogin, options: FinishLoginOptions): Promise<AuthorizedConfig> {
-  if (!options || (options.expectedIdentityFingerprint === undefined && typeof options.confirmIdentity !== 'function')) throw new Error('Explicit account identity verification is required');
-  const expected = options.expectedIdentityFingerprint?.toLowerCase();
-  if (expected !== undefined && !/^[a-f0-9]{64}$/.test(expected)) throw new Error('Expected identity fingerprint must be 64 hexadecimal characters');
+async function finishApprovedAccountLogin(input: PendingAccountLogin, options: RequestOptions = {}): Promise<AuthorizedConfig> {
+  const expected = input.expectedIdentityFingerprint.toLowerCase();
+  if (!/^[a-f0-9]{64}$/.test(expected)) throw new Error('Expected identity fingerprint must be 64 hexadecimal characters');
   const pending = structuredClone(input), {authorization, key} = pending;
   const api_url = validateAPIURL(pending.api_url);
   if (await senderPublicKey(key.privateKey) !== key.publicKey) throw new Error('Pending authorization key mismatch');
@@ -48,9 +34,7 @@ export async function finishLogin(input: PendingLogin, options: FinishLoginOptio
       if (config.api_url !== api_url) throw new Error('Authorization API origin changed');
       await verifyArchive(config, config.archive);
       const accountFingerprint = await fingerprint(config.identity_public_key);
-      const confirmed = expected !== undefined ? expected === accountFingerprint :
-        await options.confirmIdentity?.({fingerprint: accountFingerprint, userID: config.user_id});
-      if (confirmed !== true) throw new Error('Account identity not confirmed; discard this authorization');
+      if (expected !== accountFingerprint) throw new Error('Account identity not confirmed; discard this authorization');
       // The grant must bind this local private key to the claimed account/source before returning it.
       await recipientsV2(config, options);
       return config;
@@ -62,7 +46,6 @@ export async function finishLogin(input: PendingLogin, options: FinishLoginOptio
   throw new Error('Authorization expired; start login again');
 }
 
-/** Account login delegates initial approval to an online trusted device. */
 export async function beginAccountLogin(apiURL: string, accessToken: string, name: string, options: RequestOptions = {}): Promise<PendingAccountLogin> {
   if (!name.trim() || name.trim().length > 80) throw new Error('Invalid sender name');
   const api_url = validateAPIURL(apiURL), key = await generateAgreementKey();
@@ -73,7 +56,7 @@ export async function beginAccountLogin(apiURL: string, accessToken: string, nam
 }
 
 export async function finishAccountLogin(input: PendingAccountLogin, options: RequestOptions = {}): Promise<AuthorizedConfig> {
-  const config = await finishLogin(input, {...options, expectedIdentityFingerprint: input.expectedIdentityFingerprint});
+  const config = await finishApprovedAccountLogin(input, options);
   if (config.user_id !== input.accountUserID) throw new Error('Authorization account changed');
   return config;
 }

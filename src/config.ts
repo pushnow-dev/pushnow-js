@@ -16,7 +16,7 @@ export function validateArchive(value: unknown): Archive {
   return {id: archive.id, public_key: archive.public_key as string, certificate: archive.certificate as string};
 }
 
-/** Structural validation only. finishLogin pins identity; recipientsV2 verifies signed bindings. */
+/** Structural validation only. finishAccountLogin verifies identity; recipientsV2 verifies signed bindings. */
 export function validateConfig(value: unknown): AuthorizedConfig {
   const config = object(value);
   for (const field of ['api_url', 'user_id', 'source_id', 'source_key', 'identity_public_key', 'sender_private_key']) {

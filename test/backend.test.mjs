@@ -69,7 +69,7 @@ test('actual Worker HTTP/D1/R2: account, authorization, encrypted content/files,
     assert.equal(decoded.attachments[1].id,decoded.image_id);assert.equal(decoded.attachments[2].id,decoded.icon_id);
     for(const secret of [config.source_key,config.sender_private_key,descriptor.key,descriptor.read_token,content.title])assert.ok(!JSON.stringify(logs).includes(secret));
 
-    const pending=await sdk.beginLogin(h.apiURL,'Approved SDK',options);
+    const pending=await sdk.beginAccountLogin(h.apiURL,h.session.accessToken,'Approved SDK',options);
     const source=(await call('POST','/v1/sources',{name:'Approved SDK'},201)).source;
     const created=await call('POST',`/v1/sources/${source.id}/keys`,{},201);
     const ec=createECDH('prime256v1');ec.setPrivateKey(decode(f.identityPrivateKey));const pub=ec.getPublicKey();
@@ -81,7 +81,7 @@ test('actual Worker HTTP/D1/R2: account, authorization, encrypted content/files,
     const sender=await suite.createSenderContext({recipientPublicKey:await suite.kem.deserializePublicKey(decode(pending.key.publicKey)),info:bytes('pushnow-sender-grant-v2')});
     await call('POST',`/v2/authorizations/${pending.authorization.id}/approve`,{source_id:source.id,enc:base64(sender.enc),
       ciphertext:base64(await sender.seal(bytes(JSON.stringify(grantConfig)),bytes(JSON.stringify([2,'sender-grant',pending.authorization.id,pending.key.publicKey]))))},204);
-    const authorized=await sdk.finishLogin(pending,{expectedIdentityFingerprint:await sdk.fingerprint(config.identity_public_key),...options});
+    const authorized=await sdk.finishAccountLogin(pending,options);
     assert.equal(authorized.source_id,source.id);assert.equal(authorized.sender_private_key,pending.key.privateKey);
     await assert.rejects(sdk.recipientsV2({...config,source_key:authorized.source_key}),/identity changed/);
     await db.prepare('UPDATE source_keys SET expires_at=? WHERE id=?').bind('2020-01-01T00:00:00.000Z',h.keyID).run();

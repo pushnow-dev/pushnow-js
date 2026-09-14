@@ -28,7 +28,7 @@ test('real Chromium imports browser bundle and sends encrypted file over HTTP to
       const result=await sdk.sendNotification(sdk.validateConfig(config),{title:'Browser secret',body:'Browser body',
         files:[{data:new Blob(['Browser private file']),name:'browser.txt',mime:'text/plain'}]},
         {inboxOnly:true,onRequest:event=>events.push(event)});
-      const pending=await sdk.beginLogin(config.api_url,'Browser authorization');
+      const pending=await sdk.beginAccountLogin(config.api_url,session.accessToken,'Browser authorization');
       return {result,events,publicKey:pending.key.publicKey,fingerprint:pending.fingerprint};
     },{config:backend.config,session:backend.session});
     assert.equal(result.publicKey.length,88);assert.equal(result.fingerprint.length,64);
