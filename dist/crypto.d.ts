@@ -1,0 +1,10 @@
+import { CipherSuite } from '@hpke/core';
+import type { Archive, AuthorizedConfig, Envelope, PendingLogin } from './types.js';
+export declare const suite: CipherSuite;
+export declare const v2AAD: (purpose: string, config: AuthorizedConfig, messageID: string, archiveID: string) => Uint8Array<ArrayBuffer>;
+export declare function generateAgreementKey(): Promise<PendingLogin['key']>;
+export declare function senderPublicKey(privateKey: string): Promise<string>;
+export declare function verifyCertificate(root: string, kind: 'source' | 'device' | 'archive', userID: string, id: string, publicKey: string, signature: string): Promise<boolean>;
+export declare function verifyArchive(config: AuthorizedConfig, value: unknown): Promise<Archive>;
+export declare function sealV2(config: AuthorizedConfig, archive: Archive, purpose: string, messageID: string, plaintext: unknown): Promise<Envelope>;
+export declare function openSenderGrant(pending: PendingLogin, grant: Envelope): Promise<unknown>;
