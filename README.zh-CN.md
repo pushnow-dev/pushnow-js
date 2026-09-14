@@ -21,9 +21,23 @@ npm run build
 npm pack
 ```
 
-## 授权
+## 使用账号 Token 授权
 
-SDK sender 需要先在已登录的 PushNow App 中审批。`pending.fingerprint` 是新 sender 的指纹，不是账号根指纹。`expectedIdentityFingerprint` 必须来自可信设备，不能从同一个未验证 grant 自动计算并接受。
+SDK sender 需要先在已登录的 PushNow App 中审批。默认推荐使用已登录 App 或可信 Dashboard 会话里的账号 access token 创建账号绑定授权。token 只用于请求授权接口，真正发送仍依赖返回的加密 sender config。
+
+```ts
+import {beginAccountLogin, finishAccountLogin} from 'pushnow-sdk';
+
+const pending = await beginAccountLogin('https://api.pushnow.dev', accountAccessToken, 'My automation');
+// 在已登录的可信 App 中批准。user_code 和 fingerprint 可以展示。
+const config = await finishAccountLogin(pending);
+```
+
+`finishAccountLogin` 会校验 grant、API origin、账号绑定、archive 证书、source 证书、sender 私钥/公钥匹配和设备目录。只有 bearer token 不能加密消息，也不能替代返回的 sender config。
+
+## 手动 Fingerprint 授权
+
+不能使用账号 token 的 CLI 或离线环境，可以继续使用手动账号根指纹流程：
 
 ```ts
 import {beginLogin, finishLogin} from 'pushnow-sdk';
@@ -33,6 +47,8 @@ const config = await finishLogin(pending, {
   expectedIdentityFingerprint: trustedAccountFingerprint,
 });
 ```
+
+`pending.fingerprint` 是新 sender 的指纹，不是账号根指纹。`expectedIdentityFingerprint` 必须来自可信设备，不能从同一个未验证 grant 自动计算并接受。
 
 ## 发送通知
 

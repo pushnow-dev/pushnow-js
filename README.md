@@ -31,29 +31,48 @@ HPKE dependency and needs no import map. A bundler can use `pushnow-sdk` directl
 Use HTTPS, or loopback HTTP for development, in a runtime with `crypto.subtle`,
 `fetch`, `AbortController`, and `structuredClone` (modern browsers or Node 22+).
 
-## Authorize Once
+## Authorize Once With an Account Token
 
 First register, verify email and sign in to the App. Its encrypted account
 archive and approving device must already be initialized. SDK sender approval
 is separate from email/password login; the SDK does not implement account login.
+Use an account access token from your signed-in app or trusted dashboard session
+to create an account-bound sender authorization.
+
+```ts
+import {beginAccountLogin, finishAccountLogin} from 'pushnow-sdk';
+
+const controller = new AbortController();
+const pending = await beginAccountLogin('https://api.pushnow.dev', accountAccessToken, 'My automation', {
+  signal: controller.signal,
+});
+// Open the signed-in trusted App to approve this sender.
+// pending.authorization.user_code and pending.fingerprint are safe to display.
+const config = await finishAccountLogin(pending, {signal: controller.signal});
+```
+
+The account-token flow asks `/v2/account-authorizations` for the account identity
+public key while using the token only as transport authorization. `finishAccountLogin`
+still verifies the encrypted grant, API origin, account binding, archive
+certificate, source certificate, sender private/public key match and recipient
+directory before returning the config. A bearer token alone cannot encrypt
+messages and is never a replacement for the returned sender config.
+
+## Manual Fingerprint Authorization
+
+For CLI/offline environments that cannot use an account access token, keep the
+manual root-fingerprint flow:
 
 ```ts
 import {beginLogin, finishLogin} from 'pushnow-sdk';
 
-const controller = new AbortController();
-const pending = await beginLogin('https://api.pushnow.dev', 'My automation', {
-  signal: controller.signal,
-});
-// Display pending.authorization.user_code and pending.fingerprint.
-// The user approves this sender in the signed-in App.
-// Obtain the ACCOUNT identity fingerprint from that trusted App separately.
+const pending = await beginLogin('https://api.pushnow.dev', 'My automation');
 const config = await finishLogin(pending, {
   expectedIdentityFingerprint: trustedAccountFingerprint,
-  signal: controller.signal,
 });
 ```
 
-`pending.fingerprint` identifies the new sender. It is NOT the account identity
+`pending.fingerprint` identifies the new sender. It is not the account identity
 fingerprint. `expectedIdentityFingerprint` must be the independently verified
 64-character SHA-256 hex fingerprint of the account identity public key. Never
 compute the expected value from the same untrusted grant and auto-accept it.
