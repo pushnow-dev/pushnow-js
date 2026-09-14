@@ -1,8 +1,10 @@
 # PushNow TypeScript SDK
 
+[中文说明](README.zh-CN.md)
+
 Browser-compatible SDK for the existing PushNow v2 encrypted API. Uses
 `@hpke/core` 1.9.0 (P-256 / HKDF-SHA256 / AES-256-GCM) and native WebCrypto.
-No Node polyfills, persistence, analytics, or automatic publication.
+No Node polyfills, persistence or analytics.
 
 ## Local Package
 
@@ -13,9 +15,14 @@ npm run build
 npm pack
 ```
 
-Install the resulting `pushnow-sdk-0.1.0.tgz` into a consuming project, or use
-a local `file:` dependency. Package name: `@pushnow/sdk`. This folder and its
-tarball are ready for the owner's upload; no registry publication is performed.
+Install from npm after publication:
+
+```sh
+npm install @pushnow/sdk
+```
+
+For local development, install the resulting `pushnow-sdk-0.1.0.tgz` into a
+consuming project, or use a local `file:` dependency. Package name: `@pushnow/sdk`.
 
 The ESM entry `dist/index.js` includes TypeScript declarations. For an unbundled
 browser, serve `dist/browser.js` and import it as an ES module. It includes the

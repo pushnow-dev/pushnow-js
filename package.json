@@ -17,7 +17,7 @@
     "./browser": { "types": "./dist/index.d.ts", "default": "./dist/browser.js" },
     "./package.json": "./package.json"
   },
-  "files": ["dist", "README.md"],
+  "files": ["dist", "README.md", "README.zh-CN.md"],
   "scripts": {
     "check": "tsc --noEmit",
     "build": "tsc && node scripts/build.mjs",
